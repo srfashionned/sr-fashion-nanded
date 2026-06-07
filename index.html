@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#111116">
+  <title>SR Fashion Nanded Inventory</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="page-shell">
+    <header class="topbar">
+      <div>
+        <div class="brand">SR FASHION</div>
+        <div class="branch">Nanded Branch</div>
+      </div>
+      <div class="header-right">
+        <div id="summary" class="summary">Loading products...</div>
+        <button id="adminToggle" class="admin-btn">Admin</button>
+      </div>
+    </header>
+
+    <section class="controls">
+      <div class="search-box">
+        <input id="searchInput" type="search" placeholder="Search name, alias, barcode, group...">
+      </div>
+      <div class="filter-row">
+        <select id="sortSelect" title="Sort products">
+          <option value="default">Sort: Default</option>
+          <option value="name">Name A → Z</option>
+          <option value="priceAsc">Sale ↑</option>
+          <option value="priceDesc">Sale ↓</option>
+          <option value="stockDesc">Total stock ↓</option>
+        </select>
+        <button id="clearFilters" class="secondary">Clear</button>
+      </div>
+    </section>
+
+    <main id="productList" class="product-list"></main>
+  </div>
+
+  <div id="adminModal" class="modal-backdrop hidden">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Administrator Login</div>
+          <div class="modal-subtitle">Enter branch PIN to edit stock values</div>
+        </div>
+        <button id="closeAdminModal" class="close-btn">✕</button>
+      </div>
+      <div class="modal-body">
+        <input id="adminPin" type="password" placeholder="Enter 4-digit PIN" maxlength="4" inputmode="numeric">
+        <button id="adminSubmit" class="primary">Unlock Admin</button>
+        <div id="adminMessage" class="admin-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <template id="productTemplate">
+    <article class="product-card">
+      <div class="product-top">
+        <div>
+          <div class="product-name"></div>
+          <div class="product-meta"></div>
+        </div>
+        <div class="product-stock-label"></div>
+      </div>
+      <div class="product-grid">
+        <div class="field">
+          <span class="label">MRP</span>
+          <span class="value mrp"></span>
+        </div>
+        <div class="field">
+          <span class="label">Sale Price</span>
+          <span class="value sale"></span>
+        </div>
+        <div class="field">
+          <span class="label">Wholesale</span>
+          <span class="value wholesale"></span>
+        </div>
+        <div class="field">
+          <span class="label">Shop Stock</span>
+          <span class="value shop-stock"></span>
+        </div>
+        <div class="field">
+          <span class="label">Godown Stock</span>
+          <span class="value godown-stock"></span>
+        </div>
+        <div class="field">
+          <span class="label">Total Stock</span>
+          <span class="value total-stock"></span>
+        </div>
+      </div>
+      <div class="product-values hidden admin-panel">
+        <div class="editor-row">
+          <label>Shop stock</label>
+          <input class="stock-input shop-input" type="number" min="0">
+        </div>
+        <div class="editor-row">
+          <label>Godown stock</label>
+          <input class="stock-input godown-input" type="number" min="0">
+        </div>
+        <div class="editor-actions">
+          <button class="secondary save-stock">Save</button>
+          <button class="secondary reset-stock">Reset</button>
+        </div>
+      </div>
+    </article>
+  </template>
+
+  <script src="items.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
