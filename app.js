@@ -150,6 +150,12 @@ function sortProducts(list) {
     if (criterion === 'priceDesc') {
       return Number(b.sale_price) - Number(a.sale_price);
     }
+    if (criterion === 'shopDesc') {
+      return getEffectiveStock(b).shop - getEffectiveStock(a).shop;
+    }
+    if (criterion === 'godownDesc') {
+      return getEffectiveStock(b).godown - getEffectiveStock(a).godown;
+    }
     if (criterion === 'stockDesc') {
       return getTotalStock(b) - getTotalStock(a);
     }
