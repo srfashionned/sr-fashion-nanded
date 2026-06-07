@@ -18,7 +18,7 @@ const totalProducts = document.getElementById('totalProducts');
 const totalStock = document.getElementById('totalStock');
 const adminStatus = document.getElementById('adminStatus');
 
-const DATA_SOURCE_URL = null; // Set this to a JSON or CSV URL for future auto-sync
+const DATA_SOURCE_URL =https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/refs/heads/main/items.json; // Set this to a JSON or CSV URL for future auto-sync
 let products = [];
 
 let adminMode = false;
