@@ -72,6 +72,24 @@ The repo already includes `.github/workflows/stock-sync.yml`.
 2. The workflow will download the JSON or CSV, update `items.json`, and commit changes automatically.
 3. This keeps the repo copy in sync without manual updates.
 
+### Publish Busy export URL and wire it into the repo
+1. Export Busy 21 inventory to a CSV or JSON file.
+2. Host the file publicly so it can be fetched from a URL.
+   - Best option: place the file in a public GitHub repo and use the raw URL.
+   - Alternative: upload to a file host with direct raw access.
+3. If you host the file in this repository, use a raw GitHub URL like:
+   ```
+   https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json
+   ```
+   or for CSV:
+   ```
+   https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.csv
+   ```
+4. Open `app.js` and set `DATA_SOURCE_URL` to the public file URL.
+5. Commit and push the change so the site loads Busy data automatically on every page visit.
+6. Add the same URL as a GitHub secret named `INVENTORY_DATA_URL` so the workflow can refresh `items.json` automatically.
+7. To trigger the workflow manually, go to `Actions` → `Auto Sync Inventory` → `Run workflow`.
+
 ### If Busy 21 only exports CSV
 1. Export CSV from Busy 21.
 2. Make sure the first row headers match the supported field names above.
