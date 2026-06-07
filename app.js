@@ -18,7 +18,7 @@ const totalProducts = document.getElementById('totalProducts');
 const totalStock = document.getElementById('totalStock');
 const adminStatus = document.getElementById('adminStatus');
 
-const DATA_SOURCE_URL =https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/refs/heads/main/items.json; // Set this to a JSON or CSV URL for future auto-sync
+const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
 let products = [];
 
 let adminMode = false;
@@ -37,8 +37,15 @@ async function loadProducts() {
     try {
       products = await fetchInventorySource(DATA_SOURCE_URL);
     } catch (error) {
-      console.error('Failed to load auto-sync data:', error);
-      products = window.SRFASHION_PRODUCTS || [];
+      console.error('Failed to load remote data:', error);
+      try {
+        const response = await fetch('items.json');
+        if (!response.ok) throw new Error('Failed to fetch items.json');
+        products = await response.json();
+      } catch (localError) {
+        console.error('Failed to load local products:', localError);
+        products = window.SRFASHION_PRODUCTS || [];
+      }
     }
   } else if (window.SRFASHION_PRODUCTS?.length) {
     products = window.SRFASHION_PRODUCTS;

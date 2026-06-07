@@ -46,9 +46,11 @@ git push -u origin gh-pages
 Then set GitHub Pages source to the `gh-pages` branch.
 
 ## Busy 21 auto-sync
-The site can load inventory directly from a Busy 21 export using JSON or CSV.
+The site can load inventory directly from Busy 21 data automatically.
 
 ### How it works
+- The website now loads `items.json` from the GitHub repo by default.
+- A GitHub Action can keep `items.json` updated automatically from a Busy 21 JSON or CSV export.
 - If your data includes `busy_stock` or `total_stock`, the site uses that value for total stock.
 - Purchase price defaults to `₹0` when it is not provided.
 - Busy data fields that are supported:
