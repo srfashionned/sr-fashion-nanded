@@ -13,9 +13,34 @@ This is a static product inventory site for the SR Fashion Nanded branch.
 
 ## How to use
 1. Open `index.html` in a browser.
-2. Click `Admin` and enter PIN: `7865`.
-3. Edit Shop Stock and Godown Stock values for any product.
-4. Click `Save` to persist the values locally.
+2. Click `Admin` and enter PIN: `7277`.
+3. After admin unlock, the dashboard shows `Purchase Price` and enables stock editing.
+4. Edit `Shop Stock` and `Godown Stock` for any product, then click `Save`.
+5. Total stock updates automatically from the live stock data.
+6. Local edits are stored in your browser using `localStorage`.
+
+## Auto stock sync
+The site is built to support automated inventory sync from external JSON data.
+
+### Option 1: Runtime sync using a JSON source
+1. Publish your inventory as JSON with this shape:
+   - `alias`, `name`, `barcode`, `brand`, `group`, `mrp`, `sale_price`, `wholesale_price`, `purchase_price`, `shop_stock`, `godown_stock`
+2. Set `DATA_SOURCE_URL` in `app.js`:
+   ```js
+   const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
+   ```
+3. Push the repo and open the site. The page will fetch the latest JSON when it loads.
+
+### Option 2: GitHub Actions sync
+The repo includes `.github/workflows/stock-sync.yml` to keep `items.json` updated automatically.
+1. In GitHub, add a repository secret named `INVENTORY_JSON_URL` with your JSON source URL.
+2. The workflow runs on a schedule and on manual dispatch.
+3. It downloads the JSON, writes `items.json`, and commits the update when the data changes.
+
+### Recommended setup
+- Keep `items.json` in the repo as the fallback dataset for the live site.
+- Use `DATA_SOURCE_URL` for live runtime data if you have an external inventory API.
+- Use the GitHub Action for scheduled repo updates if your source is externally hosted.
 
 ## GitHub Pages deployment
 1. Create a new GitHub repository, for example `sr-fashion-nanded`.

@@ -1,0 +1,35 @@
+name: Auto Sync Inventory
+
+on:
+  schedule:
+    - cron: '0 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  update-inventory:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download inventory JSON
+        run: |
+          if [ -z "${{ secrets.INVENTORY_JSON_URL }}" ]; then
+            echo "INVENTORY_JSON_URL is not configured. Set it in repository secrets."
+            exit 1
+          fi
+          curl -L --fail "${{ secrets.INVENTORY_JSON_URL }}" -o items.json.tmp
+          jq -S . items.json.tmp > items.json
+          rm items.json.tmp
+
+      - name: Commit updated inventory
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add items.json
+          if git diff --cached --quiet; then
+            echo "No inventory changes detected."
+            exit 0
+          fi
+          git commit -m "Auto-sync inventory data"
+          git push

@@ -1,4 +1,4 @@
-﻿const ADMIN_PIN = '7865';
+﻿const ADMIN_PIN = '7277';
 const STORAGE_KEY = 'sr-nanded-stock';
 
 const searchInput = document.getElementById('searchInput');
@@ -13,6 +13,9 @@ const adminMessage = document.getElementById('adminMessage');
 const summary = document.getElementById('summary');
 const productList = document.getElementById('productList');
 const productTemplate = document.getElementById('productTemplate');
+const totalProducts = document.getElementById('totalProducts');
+const totalStock = document.getElementById('totalStock');
+const adminStatus = document.getElementById('adminStatus');
 
 const DATA_SOURCE_URL = null; // Set this to a JSON URL for future auto-sync
 let products = [];
@@ -79,8 +82,11 @@ function getTotalStock(item) {
   return shop + godown;
 }
 
-function updateSummary(count) {
+function updateSummary(count, stockCount) {
   summary.textContent = `${count.toLocaleString()} products · Admin ${adminMode ? 'enabled' : 'off'}`;
+  totalProducts.textContent = count.toLocaleString();
+  totalStock.textContent = stockCount.toLocaleString();
+  adminStatus.textContent = adminMode ? 'On' : 'Off';
 }
 
 function createProductCard(item) {
@@ -98,18 +104,30 @@ function createProductCard(item) {
   copy.querySelector('.shop-stock').textContent = shop.toString();
   copy.querySelector('.godown-stock').textContent = godown.toString();
   copy.querySelector('.total-stock').textContent = getTotalStock(item).toString();
+  copy.querySelector('.purchase-price').textContent = formatCurrency(item.purchase_price ?? item.wholesale_price ?? '–');
 
   const stockLabel = copy.querySelector('.product-stock-label');
   stockLabel.textContent = `Total: ${getTotalStock(item)}`;
   if (getTotalStock(item) === 0) {
-    stockLabel.style.color = 'var(--red)';
+    stockLabel.style.color = 'var(--danger)';
   }
 
+  const purchaseField = copy.querySelector('.purchase-field');
+  purchaseField.classList.toggle('hidden', !adminMode);
+
   const panel = copy.querySelector('.admin-panel');
+  const editorWrapper = copy.querySelector('.product-values');
   const shopInput = copy.querySelector('.shop-input');
   const godownInput = copy.querySelector('.godown-input');
   const saveButton = copy.querySelector('.save-stock');
   const resetButton = copy.querySelector('.reset-stock');
+  if (!adminMode) {
+    panel.classList.add('hidden');
+    editorWrapper.classList.add('hidden');
+  } else {
+    panel.classList.remove('hidden');
+    editorWrapper.classList.remove('hidden');
+  }
 
   const override = stockOverrides[item.alias] || {};
   shopInput.value = override.shop !== undefined ? override.shop : item.shop_stock || 0;
@@ -180,7 +198,8 @@ function filterProducts() {
 function renderProductList() {
   productList.innerHTML = '';
   const filtered = filterProducts();
-  updateSummary(filtered.length);
+  const totalVisibleStock = filtered.reduce((sum, item) => sum + getTotalStock(item), 0);
+  updateSummary(filtered.length, totalVisibleStock);
   if (filtered.length === 0) {
     productList.innerHTML = '<div class="empty-state">No products matched your search.</div>';
     return;

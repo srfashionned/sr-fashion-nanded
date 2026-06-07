@@ -20,6 +20,21 @@
       </div>
     </header>
 
+    <section class="dashboard-panels">
+      <div class="panel-card">
+        <span class="panel-title">Products</span>
+        <strong id="totalProducts">0</strong>
+      </div>
+      <div class="panel-card">
+        <span class="panel-title">Total stock</span>
+        <strong id="totalStock">0</strong>
+      </div>
+      <div class="panel-card">
+        <span class="panel-title">Admin</span>
+        <strong id="adminStatus">Off</strong>
+      </div>
+    </section>
+
     <section class="controls">
       <div class="search-box">
         <input id="searchInput" type="search" placeholder="Search name, alias, barcode, group...">
@@ -79,6 +94,10 @@
         <div class="field">
           <span class="label">Wholesale</span>
           <span class="value wholesale"></span>
+        </div>
+        <div class="field purchase-field hidden">
+          <span class="label">Purchase Price</span>
+          <span class="value purchase-price"></span>
         </div>
         <div class="field">
           <span class="label">Shop Stock</span>
