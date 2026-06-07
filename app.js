@@ -4,6 +4,7 @@ const STORAGE_KEY = 'sr-nanded-stock';
 const searchInput = document.getElementById('searchInput');
 const sortSelect = document.getElementById('sortSelect');
 const clearFilters = document.getElementById('clearFilters');
+const syncButton = document.getElementById('syncButton');
 const adminToggle = document.getElementById('adminToggle');
 const adminModal = document.getElementById('adminModal');
 const closeAdminModal = document.getElementById('closeAdminModal');
@@ -116,8 +117,8 @@ function mapCsvToObjects(lines) {
     headers.forEach((key, index) => {
       item[key] = line[index] !== undefined ? line[index].trim().replace(/^"|"$/g, '') : '';
     });
-    return item;
-  });
+    return normalizeInventoryItem(item);
+  }).filter(item => item.alias || item.name);
 }
 
 async function fetchInventorySource(url) {
@@ -127,10 +128,68 @@ async function fetchInventorySource(url) {
   const text = await response.text();
 
   if (contentType.includes('application/json') || url.endsWith('.json')) {
-    return JSON.parse(text);
+    const parsed = JSON.parse(text);
+    const loaded = Array.isArray(parsed) ? parsed : normalizeInventoryCollection(parsed);
+    return loaded.map(normalizeInventoryItem);
   }
 
   return mapCsvToObjects(parseCsv(text));
+}
+
+function normalizeInventoryCollection(data) {
+  if (Array.isArray(data)) return data;
+  const keys = Object.keys(data);
+  const arrayValue = keys.map(key => data[key]).find(Array.isArray);
+  return Array.isArray(arrayValue) ? arrayValue : [];
+}
+
+function normalizeInventoryItem(item) {
+  const normalized = {};
+  Object.keys(item).forEach(key => {
+    const rawKey = key.toString().trim().replace(/^"|"$/g, '');
+    const normalizedKey = rawKey.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '_');
+    const mappedKey = {
+      product_code: 'alias',
+      item_code: 'alias',
+      code: 'alias',
+      sku: 'alias',
+      busy_stock: 'busy_stock',
+      total_stock: 'busy_stock',
+      stock: 'busy_stock',
+      quantity: 'busy_stock',
+      purchase: 'purchase_price',
+      purchase_price: 'purchase_price',
+      cost_price: 'purchase_price',
+      print_name: 'print_name',
+      printname: 'print_name',
+      print: 'print_name',
+      category: 'group',
+      group_name: 'group',
+      group: 'group',
+      mrp: 'mrp',
+      sale_price: 'sale_price',
+      wholesale_price: 'wholesale_price',
+      shop_stock: 'shop_stock',
+      godown_stock: 'godown_stock',
+      barcode: 'barcode',
+      brand: 'brand',
+      name: 'name',
+      alias: 'alias'
+    }[normalizedKey] || normalizedKey;
+
+    const value = item[key];
+    normalized[mappedKey] = ['mrp', 'sale_price', 'wholesale_price', 'purchase_price', 'shop_stock', 'godown_stock', 'busy_stock', 'total_stock'].includes(mappedKey)
+      ? parseNumber(value)
+      : (value === null || value === undefined ? '' : value.toString().trim());
+  });
+  return normalized;
+}
+
+function parseNumber(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const cleaned = value.toString().trim().replace(/,/g, '').replace(/₹/g, '');
+  const parsed = Number(cleaned);
+  return Number.isNaN(parsed) ? null : parsed;
 }
 
 function getEffectiveStock(item) {
@@ -162,6 +221,23 @@ function updateSummary(count, stockCount) {
   totalProducts.textContent = count.toLocaleString();
   totalStock.textContent = stockCount.toLocaleString();
   adminStatus.textContent = adminMode ? 'On' : 'Off';
+}
+
+async function syncInventory() {
+  if (!DATA_SOURCE_URL) {
+    showToast('Set DATA_SOURCE_URL in app.js to enable remote sync');
+    return;
+  }
+
+  try {
+    const updated = await fetchInventorySource(DATA_SOURCE_URL);
+    products = Array.isArray(updated) ? updated : [];
+    renderProductList();
+    showToast('Busy data synchronized successfully');
+  } catch (error) {
+    console.error('Sync failed:', error);
+    showToast('Sync failed, see console for details');
+  }
 }
 
 function createProductCard(item) {
@@ -368,6 +444,7 @@ clearFilters.addEventListener('click', () => {
   renderProductList();
 });
 
+syncButton.addEventListener('click', syncInventory);
 searchInput.addEventListener('input', renderProductList);
 sortSelect.addEventListener('change', renderProductList);
 

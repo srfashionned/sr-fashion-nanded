@@ -12,15 +12,20 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Download inventory JSON
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Sync Busy inventory
+        env:
+          INVENTORY_DATA_URL: ${{ secrets.INVENTORY_DATA_URL }}
         run: |
-          if [ -z "${{ secrets.INVENTORY_JSON_URL }}" ]; then
-            echo "INVENTORY_JSON_URL is not configured. Set it in repository secrets."
+          if [ -z "$INVENTORY_DATA_URL" ]; then
+            echo "INVENTORY_DATA_URL is not configured. Set it in repository secrets."
             exit 1
           fi
-          curl -L --fail "${{ secrets.INVENTORY_JSON_URL }}" -o items.json.tmp
-          jq -S . items.json.tmp > items.json
-          rm items.json.tmp
+          node scripts/convertInventory.js
 
       - name: Commit updated inventory
         run: |
@@ -31,5 +36,5 @@ jobs:
             echo "No inventory changes detected."
             exit 0
           fi
-          git commit -m "Auto-sync inventory data"
+          git commit -m "Auto-sync Busy inventory data"
           git push

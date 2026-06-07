@@ -19,29 +19,6 @@ This is a static product inventory site for the SR Fashion Nanded branch.
 5. Total stock updates automatically from the live stock data.
 6. Local edits are stored in your browser using `localStorage`.
 
-## Auto stock sync
-The site is built to support automated inventory sync from external JSON data.
-
-### Option 1: Runtime sync using a JSON source
-1. Publish your inventory as JSON with this shape:
-   - `alias`, `name`, `barcode`, `brand`, `group`, `mrp`, `sale_price`, `wholesale_price`, `purchase_price`, `shop_stock`, `godown_stock`
-2. Set `DATA_SOURCE_URL` in `app.js`:
-   ```js
-   const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
-   ```
-3. Push the repo and open the site. The page will fetch the latest JSON when it loads.
-
-### Option 2: GitHub Actions sync
-The repo includes `.github/workflows/stock-sync.yml` to keep `items.json` updated automatically.
-1. In GitHub, add a repository secret named `INVENTORY_JSON_URL` with your JSON source URL.
-2. The workflow runs on a schedule and on manual dispatch.
-3. It downloads the JSON, writes `items.json`, and commits the update when the data changes.
-
-### Recommended setup
-- Keep `items.json` in the repo as the fallback dataset for the live site.
-- Use `DATA_SOURCE_URL` for live runtime data if you have an external inventory API.
-- Use the GitHub Action for scheduled repo updates if your source is externally hosted.
-
 ## GitHub Pages deployment
 1. Create a new GitHub repository, for example `sr-fashion-nanded`.
 2. In this folder, initialize git and commit the files:
@@ -85,11 +62,12 @@ The site can load inventory directly from a Busy 21 export using JSON or CSV.
    const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
    ```
 4. Open the site; it will fetch the latest data from that URL on load.
+5. Click the `Sync Busy Data` button to refresh immediately on demand.
 
 ### Option 2: GitHub Actions sync
 The repo already includes `.github/workflows/stock-sync.yml`.
-1. Add a GitHub secret named `INVENTORY_JSON_URL` with your Busy JSON source URL.
-2. The workflow will download the data, update `items.json`, and commit changes automatically.
+1. Add a GitHub secret named `INVENTORY_DATA_URL` with your Busy export URL.
+2. The workflow will download the JSON or CSV, update `items.json`, and commit changes automatically.
 3. This keeps the repo copy in sync without manual updates.
 
 ### If Busy 21 only exports CSV
