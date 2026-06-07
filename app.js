@@ -17,7 +17,7 @@ const totalProducts = document.getElementById('totalProducts');
 const totalStock = document.getElementById('totalStock');
 const adminStatus = document.getElementById('adminStatus');
 
-const DATA_SOURCE_URL = null; // Set this to a JSON URL for future auto-sync
+const DATA_SOURCE_URL = null; // Set this to a JSON or CSV URL for future auto-sync
 let products = [];
 
 let adminMode = false;
@@ -34,9 +34,7 @@ function loadStockOverrides() {
 async function loadProducts() {
   if (DATA_SOURCE_URL) {
     try {
-      const response = await fetch(DATA_SOURCE_URL);
-      if (!response.ok) throw new Error('Network response not ok');
-      products = await response.json();
+      products = await fetchInventorySource(DATA_SOURCE_URL);
     } catch (error) {
       console.error('Failed to load auto-sync data:', error);
       products = window.SRFASHION_PRODUCTS || [];
@@ -67,6 +65,74 @@ function formatCurrency(value) {
   return '₹' + num.toLocaleString('en-IN');
 }
 
+function parseCsv(text) {
+  const rows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        field += '"';
+        i += 1;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+
+    if (char === ',' && !inQuotes) {
+      row.push(field);
+      field = '';
+      continue;
+    }
+
+    if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (char === '\r' && text[i + 1] === '\n') i += 1;
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = '';
+      continue;
+    }
+
+    field += char;
+  }
+
+  if (field !== '' || row.length) {
+    row.push(field);
+    rows.push(row);
+  }
+
+  return rows;
+}
+
+function mapCsvToObjects(lines) {
+  const headers = lines[0].map(header => header.trim().replace(/^"|"$/g, '').toLowerCase().replace(/\s+/g, '_'));
+  return lines.slice(1).map(line => {
+    const item = {};
+    headers.forEach((key, index) => {
+      item[key] = line[index] !== undefined ? line[index].trim().replace(/^"|"$/g, '') : '';
+    });
+    return item;
+  });
+}
+
+async function fetchInventorySource(url) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error('Failed to load inventory source: ' + response.statusText);
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+
+  if (contentType.includes('application/json') || url.endsWith('.json')) {
+    return JSON.parse(text);
+  }
+
+  return mapCsvToObjects(parseCsv(text));
+}
+
 function getEffectiveStock(item) {
   const override = stockOverrides[item.alias] || {};
   const shop = override.shop !== undefined ? Number(override.shop) : Number(item.shop_stock || 0);
@@ -77,7 +143,16 @@ function getEffectiveStock(item) {
   };
 }
 
+function getBusyStock(item) {
+  const value = item.busy_stock ?? item.total_stock ?? item.stock ?? null;
+  if (value === null || value === undefined || value === '') return null;
+  const num = Number(value);
+  return Number.isNaN(num) ? null : num;
+}
+
 function getTotalStock(item) {
+  const busyStock = getBusyStock(item);
+  if (busyStock !== null) return busyStock;
   const { shop, godown } = getEffectiveStock(item);
   return shop + godown;
 }
@@ -95,20 +170,39 @@ function createProductCard(item) {
   card.dataset.alias = item.alias;
 
   copy.querySelector('.product-name').textContent = item.name;
-  copy.querySelector('.product-meta').textContent = `${item.alias} Â· ${item.group} Â· ${item.barcode}`;
+  copy.querySelector('.product-meta').textContent = `${item.alias} · ${item.group || 'General'} · ${item.barcode}`;
   copy.querySelector('.mrp').textContent = formatCurrency(item.mrp);
   copy.querySelector('.sale').textContent = formatCurrency(item.sale_price);
   copy.querySelector('.wholesale').textContent = formatCurrency(item.wholesale_price);
+  copy.querySelector('.purchase-price').textContent = formatCurrency(item.purchase_price ?? 0);
 
   const { shop, godown } = getEffectiveStock(item);
   copy.querySelector('.shop-stock').textContent = shop.toString();
   copy.querySelector('.godown-stock').textContent = godown.toString();
-  copy.querySelector('.total-stock').textContent = getTotalStock(item).toString();
-  copy.querySelector('.purchase-price').textContent = formatCurrency(item.purchase_price ?? item.wholesale_price ?? '–');
+
+  const busyStock = getBusyStock(item);
+  const totalStock = getTotalStock(item);
+  copy.querySelector('.total-stock').textContent = totalStock.toString();
+  const busyField = copy.querySelector('.busy-stock-field');
+  const busyValue = copy.querySelector('.busy-stock');
+  if (busyStock !== null) {
+    busyField.classList.remove('hidden');
+    busyValue.textContent = busyStock.toString();
+  } else {
+    busyField.classList.add('hidden');
+  }
+
+  const printField = copy.querySelector('.print-field');
+  if (item.print_name) {
+    printField.classList.remove('hidden');
+    copy.querySelector('.print-name').textContent = item.print_name;
+  } else {
+    printField.classList.add('hidden');
+  }
 
   const stockLabel = copy.querySelector('.product-stock-label');
-  stockLabel.textContent = `Total: ${getTotalStock(item)}`;
-  if (getTotalStock(item) === 0) {
+  stockLabel.textContent = busyStock !== null ? `Busy: ${busyStock}` : `Total: ${totalStock}`;
+  if (totalStock === 0) {
     stockLabel.style.color = 'var(--danger)';
   }
 

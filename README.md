@@ -68,21 +68,43 @@ git push -u origin gh-pages
 ```
 Then set GitHub Pages source to the `gh-pages` branch.
 
-## Future auto stock sync
-The site is now ready for future auto-sync. To enable it:
-- set `DATA_SOURCE_URL` in `app.js` to a JSON endpoint that returns the latest inventory data
-- host a JSON file in the repo or from another service
-- update the external JSON whenever stock changes
+## Busy 21 auto-sync
+The site can load inventory directly from a Busy 21 export using JSON or CSV.
 
-Example endpoint:
-```js
-const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/<your-username>/<repo-name>/main/items.json';
-```
+### How it works
+- If your data includes `busy_stock` or `total_stock`, the site uses that value for total stock.
+- Purchase price defaults to `₹0` when it is not provided.
+- Busy data fields that are supported:
+  - `alias`, `name`, `barcode`, `brand`, `group`, `print_name`, `mrp`, `sale_price`, `wholesale_price`, `purchase_price`, `busy_stock`, `shop_stock`, `godown_stock`
 
-For fully automated sync, you can later add a GitHub Action that regenerates `items.json` or `items.js` from a CSV or database nightly.
+### Option 1: Runtime sync from Busy 21 export
+1. Export Busy 21 inventory to JSON or CSV.
+2. Host that file somewhere public or on GitHub.
+3. Set `DATA_SOURCE_URL` in `app.js` to the file URL:
+   ```js
+   const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
+   ```
+4. Open the site; it will fetch the latest data from that URL on load.
+
+### Option 2: GitHub Actions sync
+The repo already includes `.github/workflows/stock-sync.yml`.
+1. Add a GitHub secret named `INVENTORY_JSON_URL` with your Busy JSON source URL.
+2. The workflow will download the data, update `items.json`, and commit changes automatically.
+3. This keeps the repo copy in sync without manual updates.
+
+### If Busy 21 only exports CSV
+1. Export CSV from Busy 21.
+2. Make sure the first row headers match the supported field names above.
+3. Host the CSV file and set `DATA_SOURCE_URL` to that CSV URL.
+4. The site will parse the CSV automatically.
+
+### Recommended setup
+- Keep `items.json` or `items.csv` in the repo as the fallback dataset.
+- Use `DATA_SOURCE_URL` if you have a public Busy export URL.
+- Use the GitHub Action to push scheduled or manual sync updates.
 
 ## Notes
-- `items.js` currently provides the inventory dataset used by the page.
-- `items.json` is included as a fallback and can also be used as the data source.
-- If you want live stock from a backend or Google Sheet, the next step is to provide a JSON API endpoint and update `DATA_SOURCE_URL`.
+- `items.js` is still the local fallback dataset for offline use.
+- `items.json` is the preferred repo-backed fallback and can be updated by the workflow.
+- If you want a direct Busy 21 integration later, I can help with the exact Busy API or export format.
 
