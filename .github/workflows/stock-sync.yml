@@ -5,12 +5,17 @@ on:
     - cron: '0 4 * * *'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   update-inventory:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -37,4 +42,4 @@ jobs:
             exit 0
           fi
           git commit -m "Auto-sync Busy inventory data"
-          git push
+          git push origin HEAD:${{ github.ref_name }}
