@@ -26,10 +26,6 @@ jobs:
         env:
           INVENTORY_DATA_URL: ${{ secrets.INVENTORY_DATA_URL }}
         run: |
-          if [ -z "$INVENTORY_DATA_URL" ]; then
-            echo "INVENTORY_DATA_URL is not configured. Set it in repository secrets."
-            exit 1
-          fi
           node scripts/convertInventory.js
 
       - name: Commit updated inventory

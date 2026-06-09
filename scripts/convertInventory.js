@@ -3,11 +3,7 @@ const http = require('http');
 const https = require('https');
 const { URL } = require('url');
 
-const sourceUrl = process.env.INVENTORY_DATA_URL;
-if (!sourceUrl) {
-  console.error('ERROR: INVENTORY_DATA_URL environment variable is required.');
-  process.exit(1);
-}
+const sourceUrl = process.env.INVENTORY_DATA_URL || 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
 
 function fetchText(url, redirectCount = 0) {
   return new Promise((resolve, reject) => {
@@ -159,6 +155,13 @@ async function main() {
     fs.writeFileSync('items.json', JSON.stringify(items, null, 2) + '\n', 'utf8');
     console.log(`Wrote ${items.length} products to items.json`);
   } catch (error) {
+    console.warn('Remote inventory fetch failed, using local fallback items.json:', error.message || error);
+    if (fs.existsSync('items.json')) {
+      const fallback = fs.readFileSync('items.json', 'utf8');
+      fs.writeFileSync('items.json', fallback, 'utf8');
+      console.log('Kept existing items.json as fallback.');
+      return;
+    }
     console.error('Inventory sync failed:', error.message || error);
     process.exit(1);
   }
