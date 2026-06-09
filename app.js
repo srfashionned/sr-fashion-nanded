@@ -18,7 +18,7 @@ const totalProducts = document.getElementById('totalProducts');
 const totalStock = document.getElementById('totalStock');
 const adminStatus = document.getElementById('adminStatus');
 
-const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/items.json';
+const DATA_SOURCE_URL = https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/refs/heads/main/Stock.csv;
 let products = [];
 
 let adminMode = false;
