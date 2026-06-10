@@ -18,7 +18,7 @@ const totalProducts = document.getElementById('totalProducts');
 const totalStock = document.getElementById('totalStock');
 const adminStatus = document.getElementById('adminStatus');
 
-const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/refs/heads/main/Stock.csv';
+const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/main/Stock.csv';
 let products = [];
 
 let adminMode = false;
@@ -118,14 +118,26 @@ function parseCsv(text) {
 }
 
 function mapCsvToObjects(lines) {
-  const headers = lines[0].map(header => header.trim().replace(/^"|"$/g, '').toLowerCase().replace(/\s+/g, '_'));
-  return lines.slice(1).map(line => {
+  const headerIndex = lines.findIndex(row => row.some(cell => /name|alias|mrp|sale price|stock|purchase price|group/i.test(cell)));
+  if (headerIndex < 0) return [];
+
+  const headers = lines[headerIndex].map(header =>
+    header
+      .trim()
+      .replace(/^"|"$/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .replace(/_+/g, '_')
+  );
+
+  return lines.slice(headerIndex + 1).map(line => {
     const item = {};
     headers.forEach((key, index) => {
       item[key] = line[index] !== undefined ? line[index].trim().replace(/^"|"$/g, '') : '';
     });
     return normalizeInventoryItem(item);
-  }).filter(item => item.alias || item.name);
+  }).filter(item => item.alias || item.name || item.barcode);
 }
 
 async function fetchInventorySource(url) {
@@ -154,7 +166,11 @@ function normalizeInventoryItem(item) {
   const normalized = {};
   Object.keys(item).forEach(key => {
     const rawKey = key.toString().trim().replace(/^"|"$/g, '');
-    const normalizedKey = rawKey.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '_');
+    const normalizedKey = rawKey
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
+      .replace(/_+/g, '_');
     const mappedKey = {
       product_code: 'alias',
       item_code: 'alias',
@@ -173,6 +189,8 @@ function normalizeInventoryItem(item) {
       category: 'group',
       group_name: 'group',
       group: 'group',
+      parent_group: 'group',
+      op_stock: 'busy_stock',
       mrp: 'mrp',
       sale_price: 'sale_price',
       wholesale_price: 'wholesale_price',
