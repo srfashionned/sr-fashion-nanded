@@ -1,4 +1,4 @@
-﻿const ADMIN_PIN = '7277';
+const ADMIN_PIN = '7277';
 const STORAGE_KEY = 'sr-nanded-stock';
 
 const searchInput = document.getElementById('searchInput');
@@ -18,7 +18,7 @@ const totalProducts = document.getElementById('totalProducts');
 const totalStock = document.getElementById('totalStock');
 const adminStatus = document.getElementById('adminStatus');
 
-const DATA_SOURCE_URL = https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/refs/heads/main/Stock.csv;
+const DATA_SOURCE_URL = 'https://raw.githubusercontent.com/srfashionned/sr-fashion-nanded/refs/heads/main/Stock.csv';
 let products = [];
 
 let adminMode = false;
@@ -456,4 +456,3 @@ searchInput.addEventListener('input', renderProductList);
 sortSelect.addEventListener('change', renderProductList);
 
 loadProducts();
-
